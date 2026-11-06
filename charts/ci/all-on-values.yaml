@@ -1,0 +1,19 @@
+infisical:
+  authRef:
+    name: fake-auth
+    namespace: fake-secrets
+  projectSlug: fake-project
+  environmentSlug: fake-env
+githubAppSecret:
+  enabled: true
+limitRange:
+  enabled: true
+packerService:
+  enabled: true
+  loadBalancerIP: 192.0.2.181
+  port: 8802
+  targetPort: 8802
+gha-runner-scale-set:
+  githubConfigUrl: https://github.com/fake-org
+  containerMode:
+    type: dind

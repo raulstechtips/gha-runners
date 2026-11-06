@@ -1,0 +1,21 @@
+{{- if .Values.packerService.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: packer-http
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "gha-runners-wrapper.labels" . | nindent 4 }}
+  annotations:
+    metallb.io/loadBalancerIPs: {{ required "packerService.loadBalancerIP is required when packerService.enabled is enabled" .Values.packerService.loadBalancerIP | quote }}
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Cluster
+  selector:
+    actions.github.com/scale-set-name: {{ index .Values "gha-runner-scale-set" "runnerScaleSetName" | quote }}
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ required "packerService.port is required when packerService.enabled is enabled" .Values.packerService.port }}
+      targetPort: {{ required "packerService.targetPort is required when packerService.enabled is enabled" .Values.packerService.targetPort }}
+{{- end }}

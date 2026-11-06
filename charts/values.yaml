@@ -1,0 +1,57 @@
+# Shared Infisical connection. Only the k3s application owns the GitHub App Secret.
+infisical:
+  authRef:
+    name: ""
+    namespace: ""
+  projectSlug: ""
+  environmentSlug: ""
+githubAppSecret:
+  enabled: false
+  secretName: arc-github-app
+  secretPath: /github/arc
+  recursive: true
+limitRange:
+  enabled: false
+packerService:
+  enabled: false
+  loadBalancerIP: ""
+  port: null
+  targetPort: null
+
+gha-runner-scale-set:
+  githubConfigUrl: https://github.com/raulstechtips
+  githubConfigSecret: arc-github-app
+  # One build at a time keeps node CPU and disk use bounded.
+  maxRunners: 1
+  minRunners: 0
+  runnerGroup: default
+  runnerScaleSetName: self-hosted-k3s
+  controllerServiceAccount:
+    namespace: arc-systems
+    name: gha-runners-controller-gha-rs-controller
+  template:
+    metadata:
+      labels:
+        # Keep the shared live label, including on the Packer release.
+        runner-scale-set: self-hosted-k3s
+    spec:
+      # One runner for each node. Preserve the live scheduling rule.
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  runner-scale-set: self-hosted-k3s
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: runner
+          image: ghcr.io/actions/actions-runner:latest
+          command: ["/home/runner/run.sh"]
+          # These limits cover the runner process, not builds inside dockerd.
+          resources:
+            requests:
+              cpu: 10m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 3Gi

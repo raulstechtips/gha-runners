@@ -1,0 +1,14 @@
+project-config:
+  project-name: gha-runners
+  project-description: "Helm chart for GitHub Actions runner scale sets"
+  project-namespace: arc-runners
+  publish-targets: [ghcr]
+  argo-deploy-targets:
+    - gha-runners
+    - gha-runners-packer
+  pipeline-steps:
+    helm-test: true
+    trivy-scan: true
+    opengrep-scan: true
+    helm-package-upload: true
+    argo-deploy: true

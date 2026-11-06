@@ -1,0 +1,32 @@
+suite: Packer HTTP service
+templates:
+  - templates/packer-service.yaml
+tests:
+  - it: is disabled by default
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: uses the selected scale set and environment address
+    values:
+      - ../ci/all-on-values.yaml
+    set:
+      gha-runner-scale-set.runnerScaleSetName: self-hosted-packer
+    asserts:
+      - equal:
+          path: metadata.name
+          value: packer-http
+      - equal:
+          path: metadata.annotations["metallb.io/loadBalancerIPs"]
+          value: 192.0.2.181
+      - equal:
+          path: spec
+          value:
+            type: LoadBalancer
+            externalTrafficPolicy: Cluster
+            selector:
+              actions.github.com/scale-set-name: self-hosted-packer
+            ports:
+              - name: http
+                protocol: TCP
+                port: 8802
+                targetPort: 8802

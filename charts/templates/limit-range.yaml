@@ -1,0 +1,25 @@
+{{- if .Values.limitRange.enabled }}
+## The dind sidecar is built by the chart and has no resource fields, and the
+## values file has no key for it. This LimitRange gives default limits to any
+## container in the namespace that declares none.
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: runner-defaults
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "gha-runners-wrapper.labels" . | nindent 4 }}
+spec:
+  limits:
+    - type: Container
+      ## The dind sidecar holds only dockerd and containerd, measured at about
+      ## 130Mi during a build. Build containers that dockerd starts run outside
+      ## this cgroup, thus a larger value here would protect nothing. Limit the
+      ## build with driver-opts on docker/setup-buildx-action in the workflow.
+      default:
+        cpu: 500m
+        memory: 1Gi
+      defaultRequest:
+        cpu: 10m
+        memory: 256Mi
+{{- end }}
