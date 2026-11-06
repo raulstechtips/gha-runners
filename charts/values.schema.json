@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "infisical",
+    "githubAppSecret",
+    "limitRange",
+    "packerService",
+    "gha-runner-scale-set"
+  ],
+  "properties": {
+    "infisical": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authRef",
+        "projectSlug",
+        "environmentSlug"
+      ],
+      "properties": {
+        "authRef": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "namespace"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "namespace": {
+              "type": "string"
+            }
+          }
+        },
+        "projectSlug": {
+          "type": "string"
+        },
+        "environmentSlug": {
+          "type": "string"
+        }
+      }
+    },
+    "githubAppSecret": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "secretName",
+        "secretPath",
+        "recursive"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "secretName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "secretPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recursive": {
+          "type": "boolean"
+        }
+      }
+    },
+    "limitRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "packerService": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "loadBalancerIP"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "loadBalancerIP": {
+          "type": "string"
+        },
+        "port": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "targetPort": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 65535
+        }
+      }
+    },
+    "gha-runner-scale-set": {
+      "type": "object"
+    },
+    "global": {
+      "type": "object"
+    }
+  }
+}

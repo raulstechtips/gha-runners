@@ -1,0 +1,23 @@
+suite: Runner default limits
+templates:
+  - templates/limit-range.yaml
+tests:
+  - it: is disabled by default
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: keeps live limits and requests
+    set:
+      limitRange.enabled: true
+    asserts:
+      - isKind:
+          of: LimitRange
+      - equal:
+          path: metadata.name
+          value: runner-defaults
+      - equal:
+          path: spec.limits
+          value:
+            - type: Container
+              default: {cpu: 500m, memory: 1Gi}
+              defaultRequest: {cpu: 10m, memory: 256Mi}

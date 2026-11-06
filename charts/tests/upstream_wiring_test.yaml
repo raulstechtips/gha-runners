@@ -1,0 +1,100 @@
+suite: Upstream runner wiring
+templates:
+  - charts/gha-runner-scale-set/templates/autoscalingrunnerset.yaml
+  - charts/gha-runner-scale-set/templates/manager_role.yaml
+  - charts/gha-runner-scale-set/templates/manager_role_binding.yaml
+  - charts/gha-runner-scale-set/templates/no_permission_serviceaccount.yaml
+release:
+  name: gha-runners
+  namespace: arc-runners
+capabilities:
+  majorVersion: 1
+  minorVersion: 33
+tests:
+  - it: keeps the k3s runner identity image resources and scale limits
+    template: charts/gha-runner-scale-set/templates/autoscalingrunnerset.yaml
+    set:
+      gha-runner-scale-set.containerMode.type: dind
+    asserts:
+      - equal:
+          path: metadata.name
+          value: self-hosted-k3s
+      - equal:
+          path: spec.githubConfigSecret
+          value: arc-github-app
+      - equal:
+          path: spec.maxRunners
+          value: 1
+      - equal:
+          path: spec.minRunners
+          value: 0
+      - equal:
+          path: spec.runnerGroup
+          value: default
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/actions/actions-runner:latest
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: ["/home/runner/run.sh"]
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 3Gi
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: dind
+          any: true
+  - it: preserves the upstream manager secret permissions
+    template: charts/gha-runner-scale-set/templates/manager_role.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: self-hosted-k3s-gha-rs-manager
+      - contains:
+          path: rules
+          content:
+            apiGroups: [""]
+            resources: [secrets]
+            verbs: [create, delete, get, list, patch, update]
+  - it: binds the existing controller service account
+    template: charts/gha-runner-scale-set/templates/manager_role_binding.yaml
+    asserts:
+      - equal:
+          path: subjects[0]
+          value:
+            kind: ServiceAccount
+            name: gha-runners-controller-gha-rs-controller
+            namespace: arc-systems
+  - it: keeps the runner service account name
+    template: charts/gha-runner-scale-set/templates/no_permission_serviceaccount.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: self-hosted-k3s-gha-rs-no-permission
+  - it: renders packer without dind and preserves its shared anti-affinity label
+    template: charts/gha-runner-scale-set/templates/autoscalingrunnerset.yaml
+    set:
+      gha-runner-scale-set.runnerScaleSetName: self-hosted-packer
+      gha-runner-scale-set.template.spec.containers:
+        - name: runner
+          image: ghcr.io/actions/actions-runner:latest
+          command: ["/home/runner/run.sh"]
+          resources:
+            requests: {cpu: 10m, memory: 256Mi}
+            limits: {cpu: 1000m, memory: 1Gi}
+    asserts:
+      - equal:
+          path: metadata.name
+          value: self-hosted-packer
+      - isNull:
+          path: spec.template.spec.initContainers
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 1Gi
+      - equal:
+          path: spec.template.metadata.labels.runner-scale-set
+          value: self-hosted-k3s
