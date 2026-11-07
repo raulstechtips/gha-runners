@@ -2,7 +2,7 @@ apiVersion: v2
 name: gha-runners
 description: Shared wrapper for the Kubernetes and Packer GitHub runner scale sets.
 type: application
-version: 0.0.0
+version: 0.1.0-main-c3828bf-2
 appVersion: "0.14.2"
 dependencies:
   - name: gha-runner-scale-set
